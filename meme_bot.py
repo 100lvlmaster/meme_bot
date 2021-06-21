@@ -8,17 +8,16 @@ import uuid
 
 
 # Authenticate to Twitter
-auth = tweepy.OAuthHandler("bej18ws1jYL2pOhRdKo4zgQE3",
-                           "kyBAEEDwYQZcPPUUb2KPe2zCHapRtjz4fvQQZyv0wGN2OOCWbE")
+auth = tweepy.OAuthHandler("API_KEY",
+                           "API_SECRET")
 #
-auth.set_access_token("1162051959316107264-2PZvYPonct6zC0llIHqYzwzetqu6qc",
-                      "W2lAcO57hBJs3iMz2i8hsJqUpAmjQzIYARN3TNsclUrth")
+auth.set_access_token("ACCESS_TOKEN",
+                      "ACCESS_TOKEN_SCRET")
 
 # Create API object
 api = tweepy.API(auth)
 
 dirName: str = 'images'
-useAgent: str = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1941.0 Safari/537.36'
 
 
 def getNameExt(url: str) -> str:
@@ -26,13 +25,19 @@ def getNameExt(url: str) -> str:
 
 
 def getMemes() -> list:
-    r = requests.get('https://meme-api.herokuapp.com/gimme/2')
+    print('Getting memes from API')
+    r = requests.get('https://meme-api.herokuapp.com/gimme/30')
     data = json.loads(r.text)
     return data['memes']
 
 
 def postMeme(meme):
-    api.update_with_media(f'{dirName}/{meme}')
+    print(f'Posting meme - {meme}')
+    try:
+        api.update_with_media(f'{dirName}/{meme}')
+    except Exception as e:
+        print('Somethign went wrong while posting')
+        print(e)
 
 
 def postMemes(memes: list):
@@ -45,7 +50,6 @@ def downloadMeme(url: str):
     os.makedirs(dirName, exist_ok=True)
     name: str = f'{uuid.uuid1()}.{getNameExt(url)}'
     opener = urllib.request.build_opener()
-    opener.addheaders = [('User-Agent', useAgent)]
     urllib.request.install_opener(opener)
     urllib.request.urlretrieve(url, f"{dirName}/{name}")
 
@@ -62,10 +66,12 @@ def init():
     dlMemes = os.listdir(dirName)
     try:
         postMemes(dlMemes)
-    except:
+    except Exception as e:
         time.sleep(1200)  # Sleep 20 minutes
-        print('something went wrong')
+        print('Something went wrong')
+        print(e)
     reset(dlMemes)
 
 
-init()
+while True:
+    init()
